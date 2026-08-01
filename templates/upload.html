@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZIPUSH - Upload</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* Same base styles as dashboard */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: {{ theme[4] if theme else '#060811' }};
+            color: {{ theme[5] if theme else '#c8d4f0' }};
+            font-family: 'JetBrains Mono', monospace;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: {{ theme[4] if theme else '#0c1020' }}; }
+        ::-webkit-scrollbar-thumb { background: {{ theme[2] if theme else '#00f5ff' }}; border-radius: 2px; }
+
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.08;
+            pointer-events: none;
+            animation: drift 15s ease-in-out infinite alternate;
+        }
+        .blob-1 { width: 500px; height: 500px; background: {{ theme[2] if theme else '#00f5ff' }}; top: -150px; left: -150px; }
+        .blob-2 { width: 400px; height: 400px; background: {{ theme[3] if theme else '#ff2d78' }}; bottom: -100px; right: -100px; }
+        @keyframes drift {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(30px, 20px) scale(1.08); }
+        }
+
+        .navbar {
+            background: {{ theme[4] if theme else '#0c1020' }};
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 12px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .navbar .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: {{ theme[5] if theme else '#c8d4f0' }};
+        }
+        .navbar .brand-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, {{ theme[2] if theme else '#00f5ff' }}, {{ theme[6] if theme else '#b44dff' }});
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .navbar .brand-text {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(90deg, {{ theme[2] if theme else '#00f5ff' }}, {{ theme[3] if theme else '#ff2d78' }});
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .navbar .nav-links {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .navbar .nav-links a {
+            color: #4a5578;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .navbar .nav-links a:hover, .navbar .nav-links a.active {
+            color: {{ theme[5] if theme else '#c8d4f0' }};
+            background: rgba(255,255,255,0.05);
+        }
+        .navbar .nav-links a.active {
+            color: {{ theme[2] if theme else '#00f5ff' }};
+        }
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+        }
+        .navbar .user-info .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .navbar .user-info .badge.vip {
+            background: rgba(255,184,48,0.2);
+            border: 1px solid rgba(255,184,48,0.3);
+            color: #ffb830;
+        }
+        .navbar .user-info .badge.admin {
+            background: rgba(255,45,120,0.2);
+            border: 1px solid rgba(255,45,120,0.3);
+            color: #ff2d78;
+        }
+        .navbar .user-info .logout-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.06);
+            color: #4a5578;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .navbar .user-info .logout-btn:hover {
+            border-color: #ff2d78;
+            color: #ff2d78;
+        }
+
+        .main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .page-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, {{ theme[2] if theme else '#00f5ff' }}, {{ theme[3] if theme else '#ff2d78' }});
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-sub {
+            color: #4a5578;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: {{ theme[4] if theme else '#0c1020' }};
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .card .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: {{ theme[2] if theme else '#00f5ff' }};
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card .card-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(0,245,255,0.2), transparent);
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+        .input-group label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #4a5578;
+            letter-spacing: 0.05em;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            background: {{ theme[4] if theme else '#111828' }};
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            color: {{ theme[5] if theme else '#c8d4f0' }};
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            padding: 10px 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus, .input-group select:focus {
+            border-color: rgba(0,245,255,0.4);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: transparent;
+            color: #4a5578;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: rgba(0,245,255,0.1);
+            border-color: rgba(0,245,255,0.4);
+            color: {{ theme[2] if theme else '#00f5ff' }};
+        }
+
+        .drop-zone {
+            border: 2px dashed rgba(0,245,255,0.15);
+            border-radius: 14px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: {{ theme[4] if theme else '#111828' }};
+        }
+        .drop-zone:hover, .drop-zone.over {
+            border-color: rgba(0,245,255,0.5);
+            background: rgba(0,245,255,0.03);
+        }
+        .drop-icon { font-size: 40px; margin-bottom: 12px; display: block; }
+        .drop-text { font-size: 14px; color: #8a9bb8; }
+        .drop-text strong { color: {{ theme[2] if theme else '#00f5ff' }}; }
+        .drop-hint { font-size: 11px; color: #4a5578; margin-top: 6px; }
+
+        .drop-file {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: {{ theme[4] if theme else '#111828' }};
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(0,245,255,0.1);
+        }
+        .drop-remove {
+            color: #ff2d78;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .drop-remove:hover { background: rgba(255,45,120,0.1); }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: {{ theme[4] if theme else '#111828' }};
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .toggle {
+            width: 40px;
+            height: 22px;
+            border-radius: 11px;
+            background: #060811;
+            border: 1px solid rgba(255,255,255,0.06);
+            position: relative;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        .toggle.on { background: rgba(0,245,255,0.2); border-color: {{ theme[2] if theme else '#00f5ff' }}; }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: #4a5578;
+            transition: all 0.3s;
+        }
+        .toggle.on::after { transform: translateX(18px); background: {{ theme[2] if theme else '#00f5ff' }}; }
+
+        .btn-push {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 800;
+            background: linear-gradient(135deg, {{ theme[2] if theme else '#00f5ff' }}, {{ theme[6] if theme else '#b44dff' }}, {{ theme[3] if theme else '#ff2d78' }});
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 0.1em;
+            margin-top: 8px;
+        }
+        .btn-push:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 40px rgba(0,245,255,0.3);
+        }
+        .btn-push:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .log-box {
+            background: #040608;
+            border: 1px solid rgba(0,245,255,0.08);
+            border-radius: 12px;
+            padding: 16px;
+            max-height: 280px;
+            overflow-y: auto;
+            margin-top: 16px;
+            font-size: 12px;
+            display: none;
+        }
+        .log-line {
+            display: flex;
+            gap: 8px;
+            line-height: 1.6;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-8px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .log-info .log-dot { color: {{ theme[2] if theme else '#00f5ff' }}; }
+        .log-success .log-dot { color: #0dff8c; }
+        .log-error .log-dot { color: #ff2d78; }
+        .log-done .log-dot { color: #ffb830; }
+        .log-dot { font-weight: bold; width: 20px; flex-shrink: 0; }
+
+        .done-banner {
+            display: none;
+            align-items: center;
+            gap: 14px;
+            background: rgba(13,255,140,0.06);
+            border: 1px solid rgba(13,255,140,0.2);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-top: 14px;
+        }
+        .done-banner .done-icon { font-size: 24px; }
+        .done-link {
+            color: #0dff8c;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(13,255,140,0.3);
+            font-size: 13px;
+            word-break: break-all;
+        }
+        .done-link:hover { border-bottom-color: #0dff8c; }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            .navbar .nav-links a { font-size: 11px; padding: 6px 10px; }
+            .main { padding: 16px; }
+            .page-title { font-size: 22px; }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(12,16,32,0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 16px 24px;
+            max-width: 380px;
+            z-index: 999;
+            animation: slideIn 0.4s ease;
+        }
+        .toast.success { border-color: rgba(13,255,140,0.3); }
+        .toast.error { border-color: rgba(255,45,120,0.3); }
+        .toast .toast-title { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+        .toast .toast-msg { font-size: 12px; color: #8a9bb8; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="/dashboard" class="brand">
+                <div class="brand-icon">⚡</div>
+                <span class="brand-text">ZIPUSH</span>
+            </a>
+            <div class="nav-links">
+                <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="/upload" class="active"><i class="fas fa-upload"></i> Upload</a>
+                <a href="/images"><i class="fas fa-images"></i> Images</a>
+                <a href="/bot-control"><i class="fas fa-robot"></i> Bot</a>
+                <a href="/settings"><i class="fas fa-cog"></i></a>
+                {% if user[3] == 1 %}
+                <a href="/admin"><i class="fas fa-crown" style="color:#ff2d78;"></i></a>
+                {% endif %}
+            </div>
+            <div class="user-info">
+                <span style="color:#4a5578;">@{{ user[1] }}</span>
+                {% if user[4] == 1 %}
+                <span class="badge vip"><i class="fas fa-star"></i> VIP</span>
+                {% endif %}
+                {% if user[3] == 1 %}
+                <span class="badge admin"><i class="fas fa-shield-alt"></i> Admin</span>
+                {% endif %}
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="main">
+        <div class="page-title"><i class="fas fa-upload"></i> Upload to GitHub</div>
+        <div class="page-sub">Upload your ZIP file and deploy to GitHub with folder structure preserved.</div>
+
+        <!-- GitHub Token -->
+        <div class="card">
+            <div class="card-title"><i class="fab fa-github"></i> GitHub Token</div>
+            <div class="input-group">
+                <label>GitHub Personal Access Token</label>
+                <div style="display:flex;gap:8px;">
+                    <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxx" style="flex:1;" />
+                    <button class="btn-connect" onclick="connectGitHub()" style="padding:10px 20px;border:none;border-radius:10px;background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.3);color:#00f5ff;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;">
+                        <i class="fas fa-plug"></i> Connect
+                    </button>
+                </div>
+            </div>
+            <div id="user-badge" style="display:none;margin-top:12px;padding:12px 16px;background:rgba(13,255,140,0.05);border:1px solid rgba(13,255,140,0.15);border-radius:12px;display:flex;align-items:center;gap:12px;">
+                <img id="avatar" style="width:32px;height:32px;border-radius:50%;border:2px solid rgba(13,255,140,0.3);" />
+                <span id="user-name" style="color:#0dff8c;font-weight:600;font-size:13px;"></span>
+                <span id="user-repos" style="color:#4a5578;font-size:11px;margin-left:auto;"></span>
+            </div>
+        </div>
+
+        <!-- Repository -->
+        <div class="card" id="repo-card" style="display:none;">
+            <div class="card-title"><i class="fas fa-folder-open"></i> Repository</div>
+            <div class="tabs">
+                <button class="tab active" onclick="setMode('existing')">Existing Repo</button>
+                <button class="tab" onclick="setMode('new')">Create New</button>
+            </div>
+            <div id="mode-existing">
+                <div class="input-group">
+                    <label>Select Repository</label>
+                    <select id="repo-select"></select>
+                </div>
+            </div>
+            <div id="mode-new" style="display:none;">
+                <div class="input-group">
+                    <label>Repository Name</label>
+                    <input type="text" id="new-repo-input" placeholder="my-awesome-repo" />
+                </div>
+                <div class="toggle-row" onclick="togglePrivate()">
+                    <span><i class="fas fa-lock"></i> Private repository</span>
+                    <div class="toggle" id="private-toggle"></div>
+                </div>
+            </div>
+            <div class="input-group" style="margin-top:12px;">
+                <label>Project Name (optional)</label>
+                <input type="text" id="project-name" placeholder="My Project Name" />
+            </div>
+        </div>
+
+        <!-- ZIP Upload -->
+        <div class="card" id="upload-card" style="display:none;">
+            <div class="card-title"><i class="fas fa-file-archive"></i> ZIP File</div>
+            <div class="drop-zone" id="drop-zone" onclick="document.getElementById('zip-input').click()"
+                ondragover="onDragOver(event)" ondragleave="onDragLeave()" ondrop="onDrop(event)">
+                <span class="drop-icon">📦</span>
+                <div class="drop-text">Drop your <strong>.zip</strong> here or click to browse</div>
+                <div class="drop-hint"><i class="fas fa-folder-tree"></i> Preserves all folders and subfolders</div>
+            </div>
+            <div id="drop-file-info" style="display:none;margin-top:12px;">
+                <div class="drop-file">
+                    <span id="drop-file-name"></span>
+                    <span class="drop-remove" onclick="clearZip()"><i class="fas fa-times"></i> Remove</span>
+                </div>
+            </div>
+            <input type="file" id="zip-input" accept=".zip" style="display:none;" onchange="onFileSelect(event)" />
+        </div>
+
+        <!-- Push Button -->
+        <button class="btn-push" id="push-btn" style="display:none;" onclick="pushToGitHub()">
+            <i class="fas fa-rocket"></i> PUSH TO GITHUB
+        </button>
+
+        <!-- Logs -->
+        <div id="log-box" class="log-box"></div>
+
+        <!-- Done Banner -->
+        <div id="done-banner" class="done-banner">
+            <span class="done-icon">🚀</span>
+            <div>
+                <div style="font-weight:700;font-size:14px;">Successfully deployed!</div>
+                <a class="done-link" id="repo-link" href="#" target="_blank"></a>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        const API = window.location.origin;
+        let userData = null, reposData = [], mode = 'existing', isPrivate = false;
+        let zipFile = null, pushing = false;
+
+        function showToast(title, message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-title">${title}</div>
+                <div class="toast-msg">${message}</div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        async function logout() {
+            await fetch(`${API}/api/logout`, { method: 'POST', credentials: 'include' });
+            window.location.href = '/login';
+        }
+
+        async function connectGitHub() {
+            const token = document.getElementById('token-input').value.trim();
+            if (!token) { showToast('⚠️ Error', 'Please enter a GitHub token', 'error'); return; }
+            
+            const btn = event.target;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+            btn.disabled = true;
+            
+            try {
+                const res = await fetch(`${API}/api/connect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ token })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    showToast('❌ Failed', data.error || 'Connection failed', 'error');
+                    return;
+                }
+                userData = data.user;
+                reposData = data.repos;
+                document.getElementById('avatar').src = userData.avatar_url;
+                document.getElementById('user-name').textContent = '@' + userData.login;
+                document.getElementById('user-repos').textContent = reposData.length + ' repos';
+                document.getElementById('user-badge').style.display = 'flex';
+                
+                const sel = document.getElementById('repo-select');
+                sel.innerHTML = reposData.map(r => 
+                    `<option value="${r.name}">${r.name} ${r.private ? '🔒' : '📂'}</option>`
+                ).join('');
+                
+                document.getElementById('repo-card').style.display = 'block';
+                document.getElementById('upload-card').style.display = 'block';
+                document.getElementById('push-btn').style.display = 'block';
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+                btn.style.color = '#0dff8c';
+                showToast('✅ Connected', 'GitHub: @' + userData.login, 'success');
+            } catch (e) {
+                showToast('❌ Error', e.message, 'error');
+                btn.innerHTML = '<i class="fas fa-plug"></i> Connect';
+                btn.disabled = false;
+            }
+        }
+
+        function setMode(m) {
+            mode = m;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if (m === 'existing') {
+                document.querySelector('.tab:first-child').classList.add('active');
+                document.getElementById('mode-existing').style.display = 'block';
+                document.getElementById('mode-new').style.display = 'none';
+            } else {
+                document.querySelector('.tab:last-child').classList.add('active');
+                document.getElementById('mode-existing').style.display = 'none';
+                document.getElementById('mode-new').style.display = 'block';
+            }
+        }
+
+        function togglePrivate() {
+            isPrivate = !isPrivate;
+            document.getElementById('private-toggle').classList.toggle('on', isPrivate);
+        }
+
+        function onDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('over'); }
+        function onDragLeave() { document.getElementById('drop-zone').classList.remove('over'); }
+        function onDrop(e) {
+            e.preventDefault();
+            onDragLeave();
+            const f = e.dataTransfer.files[0];
+            if (f && f.name.endsWith('.zip')) setZip(f);
+            else showToast('⚠️ Error', 'Only .zip files allowed', 'error');
+        }
+        function onFileSelect(e) { if (e.target.files[0]) setZip(e.target.files[0]); }
+
+        function setZip(f) {
+            zipFile = f;
+            document.getElementById('drop-zone').style.display = 'none';
+            document.getElementById('drop-file-info').style.display = 'block';
+            document.getElementById('drop-file-name').innerHTML =
+                `📦 <strong>${f.name}</strong> <span style="color:#4a5578;font-size:11px;">(${(f.size/1024).toFixed(1)} KB)</span>`;
+            showToast('📦 File Selected', f.name, 'info');
+        }
+
+        function clearZip() {
+            zipFile = null;
+            document.getElementById('zip-input').value = '';
+            document.getElementById('drop-zone').style.display = 'block';
+            document.getElementById('drop-file-info').style.display = 'none';
+        }
+
+        function addLog(type, text) {
+            const icons = { info:'›', success:'✓', error:'✗', done:'★', warn:'⚠' };
+            const logBox = document.getElementById('log-box');
+            logBox.style.display = 'block';
+            const line = document.createElement('div');
+            line.className = `log-line log-${type}`;
+            line.innerHTML = `<span class="log-dot">${icons[type] || '·'}</span><span>${text}</span>`;
+            logBox.appendChild(line);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        async function pushToGitHub() {
+            if (pushing) return;
+            const token = document.getElementById('token-input').value.trim();
+            if (!token) { showToast('⚠️ Error', 'Connect GitHub first', 'error'); return; }
+            
+            let repoName = mode === 'existing' ? document.getElementById('repo-select').value : document.getElementById('new-repo-input').value.trim();
+            if (!repoName) { showToast('⚠️ Error', 'Enter a repository name', 'error'); return; }
+            if (!zipFile) { showToast('⚠️ Error', 'Select a ZIP file', 'error'); return; }
+
+            pushing = true;
+            const btn = document.getElementById('push-btn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PUSHING...';
+            btn.disabled = true;
+
+            const logBox = document.getElementById('log-box');
+            logBox.innerHTML = '';
+            logBox.style.display = 'block';
+            document.getElementById('done-banner').style.display = 'none';
+            addLog('info', '🚀 Starting deployment...');
+
+            const fd = new FormData();
+            fd.append('token', token);
+            fd.append('mode', mode);
+            fd.append('repo_name', repoName);
+            fd.append('private', isPrivate);
+            fd.append('zip_file', zipFile);
+            fd.append('project_name', document.getElementById('project-name').value.trim());
+
+            try {
+                const res = await fetch(`${API}/api/push`, { method: 'POST', body: fd });
+                const data = await res.json();
+                if (!res.ok) {
+                    addLog('error', data.error || 'Push failed');
+                    showToast('❌ Failed', data.error || 'Push failed', 'error');
+                    return;
+                }
+                if (data.logs) data.logs.forEach(l => addLog(l.type, l.text));
+                if (data.repo_url) {
+                    document.getElementById('repo-link').href = data.repo_url;
+                    document.getElementById('repo-link').textContent = data.repo_url;
+                    document.getElementById('done-banner').style.display = 'flex';
+                    showToast('🚀 Success!', 'Deployed to GitHub', 'success');
+                }
+                if (data.total_files) addLog('done', `✅ Pushed ${data.total_files} file(s)`);
+            } catch (e) {
+                addLog('error', 'Network error: ' + e.message);
+                showToast('❌ Error', e.message, 'error');
+            } finally {
+                pushing = false;
+                btn.innerHTML = '<i class="fas fa-rocket"></i> PUSH TO GITHUB';
+                btn.disabled = false;
+            }
+        }
+
+        // Check auth
+        async function checkAuth() {
+            try {
+                const res = await fetch(`${API}/api/me`, { credentials: 'include' });
+                if (!res.ok) window.location.href = '/login';
+            } catch (e) { window.location.href = '/login'; }
+        }
+        checkAuth();
+
+        // Load stored token
+        async function loadToken() {
+            try {
+                const res = await fetch(`${API}/api/get-token`, { credentials: 'include' });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.token) {
+                        document.getElementById('token-input').value = data.token;
+                        // Auto-connect after a moment
+                        setTimeout(connectGitHub, 500);
+                    }
+                }
+            } catch (e) {}
+        }
+        loadToken();
+    </script>
+</body>
+</html>
