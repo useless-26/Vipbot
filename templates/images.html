@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZIPUSH - Images</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: {{ theme[4] if theme else '#060811' }};
+            color: {{ theme[5] if theme else '#c8d4f0' }};
+            font-family: 'JetBrains Mono', monospace;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: {{ theme[4] if theme else '#0c1020' }}; }
+        ::-webkit-scrollbar-thumb { background: {{ theme[2] if theme else '#00f5ff' }}; border-radius: 2px; }
+
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.08;
+            pointer-events: none;
+            animation: drift 15s ease-in-out infinite alternate;
+        }
+        .blob-1 { width: 500px; height: 500px; background: {{ theme[2] if theme else '#00f5ff' }}; top: -150px; left: -150px; }
+        .blob-2 { width: 400px; height: 400px; background: {{ theme[3] if theme else '#ff2d78' }}; bottom: -100px; right: -100px; }
+        @keyframes drift {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(30px, 20px) scale(1.08); }
+        }
+
+        .navbar {
+            background: {{ theme[4] if theme else '#0c1020' }};
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 12px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .navbar .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: {{ theme[5] if theme else '#c8d4f0' }};
+        }
+        .navbar .brand-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, {{ theme[2] if theme else '#00f5ff' }}, {{ theme[6] if theme else '#b44dff' }});
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .navbar .brand-text {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(90deg, {{ theme[2] if theme else '#00f5ff' }}, {{ theme[3] if theme else '#ff2d78' }});
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .navbar .nav-links {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .navbar .nav-links a {
+            color: #4a5578;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .navbar .nav-links a:hover, .navbar .nav-links a.active {
+            color: {{ theme[5] if theme else '#c8d4f0' }};
+            background: rgba(255,255,255,0.05);
+        }
+        .navbar .nav-links a.active {
+            color: {{ theme[2] if theme else '#00f5ff' }};
+        }
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+        }
+        .navbar .user-info .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .navbar .user-info .badge.vip {
+            background: rgba(255,184,48,0.2);
+            border: 1px solid rgba(255,184,48,0.3);
+            color: #ffb830;
+        }
+        .navbar .user-info .badge.admin {
+            background: rgba(255,45,120,0.2);
+            border: 1px solid rgba(255,45,120,0.3);
+            color: #ff2d78;
+        }
+        .navbar .user-info .logout-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.06);
+            color: #4a5578;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .navbar .user-info .logout-btn:hover {
+            border-color: #ff2d78;
+            color: #ff2d78;
+        }
+
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .page-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, {{ theme[2] if theme else '#00f5ff' }}, {{ theme[3] if theme else '#ff2d78' }});
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-sub {
+            color: #4a5578;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            background: {{ theme[4] if theme else '#0c1020' }};
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 16px 24px;
+            flex: 1;
+            min-width: 150px;
+        }
+        .stat-box .num {
+            font-size: 24px;
+            font-weight: 800;
+            font-family: 'Syne', sans-serif;
+            color: {{ theme[2] if theme else '#00f5ff' }};
+        }
+        .stat-box .label {
+            font-size: 11px;
+            color: #4a5578;
+            margin-top: 2px;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+        }
+        .image-card {
+            background: {{ theme[4] if theme else '#0c1020' }};
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .image-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0,245,255,0.2);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .image-card .img-wrap {
+            width: 100%;
+            height: 180px;
+            background: #060811;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .image-card .img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-card .img-wrap .no-img {
+            color: #4a5578;
+            font-size: 12px;
+        }
+        .image-card .img-info {
+            padding: 14px 16px;
+        }
+        .image-card .img-info .file-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: {{ theme[5] if theme else '#c8d4f0' }};
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+        .image-card .img-info .file-meta {
+            font-size: 10px;
+            color: #4a5578;
+        }
+        .image-card .img-info .file-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .image-card .img-info .file-actions button {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 10px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .image-card .img-info .file-actions .btn-url {
+            background: rgba(0,245,255,0.1);
+            color: {{ theme[2] if theme else '#00f5ff' }};
+            border: 1px solid rgba(0,245,255,0.2);
+        }
+        .image-card .img-info .file-actions .btn-url:hover {
+            background: rgba(0,245,255,0.2);
+        }
+        .image-card .img-info .file-actions .btn-delete {
+            background: rgba(255,45,120,0.1);
+            color: #ff2d78;
+            border: 1px solid rgba(255,45,120,0.2);
+        }
+        .image-card .img-info .file-actions .btn-delete:hover {
+            background: rgba(255,45,120,0.2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #4a5578;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+        .empty-state .title {
+            font-size: 18px;
+            font-weight: 700;
+            color: {{ theme[5] if theme else '#c8d4f0' }};
+            margin-bottom: 8px;
+        }
+        .empty-state .sub {
+            font-size: 13px;
+        }
+        .empty-state a {
+            color: {{ theme[2] if theme else '#00f5ff' }};
+            text-decoration: none;
+            border-bottom: 1px solid rgba(0,245,255,0.3);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(12,16,32,0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 16px 24px;
+            max-width: 380px;
+            z-index: 999;
+            animation: slideIn 0.4s ease;
+        }
+        .toast.success { border-color: rgba(13,255,140,0.3); }
+        .toast.error { border-color: rgba(255,45,120,0.3); }
+        .toast .toast-title { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+        .toast .toast-msg { font-size: 12px; color: #8a9bb8; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @media (max-width: 768px) {
+            .navbar .nav-links a { font-size: 11px; padding: 6px 10px; }
+            .main { padding: 16px; }
+            .page-title { font-size: 22px; }
+            .image-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="/dashboard" class="brand">
+                <div class="brand-icon">⚡</div>
+                <span class="brand-text">ZIPUSH</span>
+            </a>
+            <div class="nav-links">
+                <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="/upload"><i class="fas fa-upload"></i> Upload</a>
+                <a href="/images" class="active"><i class="fas fa-images"></i> Images</a>
+                <a href="/bot-control"><i class="fas fa-robot"></i> Bot</a>
+                <a href="/settings"><i class="fas fa-cog"></i></a>
+                {% if user[3] == 1 %}
+                <a href="/admin"><i class="fas fa-crown" style="color:#ff2d78;"></i></a>
+                {% endif %}
+            </div>
+            <div class="user-info">
+                <span style="color:#4a5578;">@{{ user[1] }}</span>
+                {% if user[4] == 1 %}
+                <span class="badge vip"><i class="fas fa-star"></i> VIP</span>
+                {% endif %}
+                {% if user[3] == 1 %}
+                <span class="badge admin"><i class="fas fa-shield-alt"></i> Admin</span>
+                {% endif %}
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="main">
+        <div class="page-title"><i class="fas fa-images"></i> Your Images</div>
+        <div class="page-sub">All images you've uploaded via ZIPUSH with direct access URLs.</div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="num">{{ images|length }}</div>
+                <div class="label"><i class="fas fa-image"></i> Total Images</div>
+            </div>
+            <div class="stat-box">
+                <div class="num">{{ images|selectattr('4', 'defined')|list|length }}</div>
+                <div class="label"><i class="fas fa-hdd"></i> Total Size (KB)</div>
+            </div>
+        </div>
+
+        <!-- Image Grid -->
+        {% if images %}
+        <div class="image-grid">
+            {% for img in images %}
+            <div class="image-card" id="img-{{ img[0] }}">
+                <div class="img-wrap">
+                    <img src="{{ img[1] }}" alt="{{ img[2] }}" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\'no-img\'><i class=\'fas fa-image\'></i> No preview</span>'" />
+                </div>
+                <div class="img-info">
+                    <div class="file-name">{{ img[2].split('/')[-1] }}</div>
+                    <div class="file-meta">
+                        {{ img[3] }} • {{ (img[4] / 1024)|round(1) }} KB • {{ img[5][:10] }}
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn-url" onclick="copyUrl('{{ img[1] }}')">
+                            <i class="fas fa-copy"></i> URL
+                        </button>
+                        <button class="btn-url" onclick="openUrl('{{ img[1] }}')">
+                            <i class="fas fa-external-link-alt"></i> Open
+                        </button>
+                        <button class="btn-delete" onclick="deleteImage('{{ img[0] }}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon"><i class="fas fa-images"></i></div>
+            <div class="title">No Images Yet</div>
+            <div class="sub">Upload a ZIP file containing images to see them here.<br />
+                <a href="/upload">Go to Upload →</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        const API = window.location.origin;
+
+        function showToast(title, message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-title">${title}</div>
+                <div class="toast-msg">${message}</div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        async function logout() {
+            await fetch(`${API}/api/logout`, { method: 'POST', credentials: 'include' });
+            window.location.href = '/login';
+        }
+
+        function copyUrl(url) {
+            navigator.clipboard.writeText(url);
+            showToast('✅ Copied!', 'Image URL copied to clipboard', 'success');
+        }
+
+        function openUrl(url) {
+            window.open(url, '_blank');
+        }
+
+        async function deleteImage(imageId) {
+            if (!confirm('Delete this image?')) return;
+            try {
+                const res = await fetch(`${API}/api/images/delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ image_id: imageId })
+                });
+                if (res.ok) {
+                    document.getElementById(`img-${imageId}`).remove();
+                    showToast('🗑️ Deleted', 'Image removed successfully', 'success');
+                    // Refresh count
+                    const count = document.querySelectorAll('.image-card').length;
+                    document.querySelector('.stat-box .num').textContent = count;
+                    if (count === 0) location.reload();
+                } else {
+                    showToast('❌ Failed', 'Could not delete image', 'error');
+                }
+            } catch (e) {
+                showToast('❌ Error', e.message, 'error');
+            }
+        }
+
+        // Check auth
+        async function checkAuth() {
+            try {
+                const res = await fetch(`${API}/api/me`, { credentials: 'include' });
+                if (!res.ok) window.location.href = '/login';
+            } catch (e) { window.location.href = '/login'; }
+        }
+        checkAuth();
+    </script>
+</body>
+</html>
